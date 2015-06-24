@@ -32,6 +32,7 @@ import com.novoda.notils.logger.simple.Log;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -288,9 +289,13 @@ class DownloadThread implements Runnable {
         setupDestinationFile(state);
 
         // skip when already finished; remove after fixing race in 5217390
+        if (isWaitForIt()) {
+            state.mTotalBytes = -1;
+        }
         if (state.mCurrentBytes == state.mTotalBytes) {
-            Log.i("Skipping initiating request for download " +
-                    mInfo.mId + "; already completed");
+            Log.i(
+                    "Skipping initiating request for download " +
+                            mInfo.mId + "; already completed");
             return;
         }
 
@@ -397,7 +402,7 @@ class DownloadThread implements Runnable {
 
             // Start streaming data, periodically watch for pause/cancel
             // commands and checking disk space as needed.
-            transferData(state, in, out);
+            transferData(state, in, out, outFd);
 
 //            try {
 //                if (out instanceof DrmOutputStream) {
@@ -414,18 +419,22 @@ class DownloadThread implements Runnable {
 
             closeQuietly(in);
 
-            try {
-                if (out != null) {
-                    out.flush();
-                }
-                if (outFd != null) {
-                    outFd.sync();
-                }
-            } catch (IOException e) {
-                Log.e("Fail sync");
-            } finally {
-                closeQuietly(out);
+            closeAfterWrite(out, outFd);
+        }
+    }
+
+    private void closeAfterWrite(OutputStream out, FileDescriptor outFd) {
+        try {
+            if (out != null) {
+                out.flush();
             }
+            if (outFd != null) {
+                outFd.sync();
+            }
+        } catch (IOException e) {
+            Log.e("Fail sync");
+        } finally {
+            closeQuietly(out);
         }
     }
 
@@ -454,12 +463,12 @@ class DownloadThread implements Runnable {
      * Transfer as much data as possible from the HTTP response to the
      * destination file.
      */
-    private void transferData(State state, InputStream in, OutputStream out) throws StopRequestException {
+    private void transferData(State state, InputStream in, OutputStream out, FileDescriptor outFd) throws StopRequestException {
         final byte data[] = new byte[Constants.BUFFER_SIZE];
         for (; ; ) {
             int bytesRead = readFromResponse(state, data, in);
             if (bytesRead == -1) { // success, end of stream already reached
-                handleEndOfStream(state);
+                handleEndOfStream(state, out, outFd);
                 return;
             }
 
@@ -577,7 +586,8 @@ class DownloadThread implements Runnable {
                     mStorageManager.verifySpace(mInfo.mDestination, state.mFilename, bytesRead);
                     forceVerified = true;
                 } else {
-                    throw new StopRequestException(STATUS_FILE_ERROR,
+                    throw new StopRequestException(
+                            STATUS_FILE_ERROR,
                             "Failed to write data: " + ex);
                 }
             }
@@ -588,7 +598,22 @@ class DownloadThread implements Runnable {
      * Called when we've reached the end of the HTTP response stream, to update the database and
      * check for consistency.
      */
-    private void handleEndOfStream(State state) throws StopRequestException {
+    private void handleEndOfStream(State state, OutputStream out, FileDescriptor outFd) throws StopRequestException {
+        if (isWaitForIt()) {
+            closeAfterWrite(out, outFd);
+            truncateIfNeeded(state);
+
+            ContentValues values = new ContentValues();
+            values.put(Downloads.Impl.COLUMN_CURRENT_BYTES, state.mCurrentBytes);
+            values.put(Downloads.Impl.COLUMN_TOTAL_BYTES, state.mCurrentBytes);
+            mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
+
+            pause();
+            mInfo.mControl = Downloads.Impl.STATUS_PAUSED_BY_APP;
+            mInfo.mStatus = Downloads.Impl.STATUS_PAUSED_BY_APP;
+            throw new StopRequestException(Downloads.Impl.STATUS_PAUSED_BY_APP, "download paused by owner");
+        }
+
         ContentValues values = new ContentValues();
         values.put(Downloads.Impl.COLUMN_CURRENT_BYTES, state.mCurrentBytes);
         if (state.mContentLength == -1) {
@@ -605,6 +630,72 @@ class DownloadThread implements Runnable {
                 throw new StopRequestException(STATUS_HTTP_DATA_ERROR, "closed socket before end of file");
             }
         }
+    }
+
+    private void truncateIfNeeded(State state) throws StopRequestException {
+        copyFileTruncatingLastBytesIfNeeded(state, state.mFilename + ".tmp");
+        File oldFile = new File(state.mFilename);
+        oldFile.delete();
+        File newFile = new File(state.mFilename + ".tmp");
+        newFile.renameTo(oldFile);
+    }
+
+    private void copyFileTruncatingLastBytesIfNeeded(State state, String fileCopy) throws StopRequestException {
+        OutputStream out = null;
+        FileDescriptor outFd = null;
+        try {
+            FileInputStream fileInputStream = new FileInputStream(state.mFilename);
+            out = new FileOutputStream(fileCopy, true);
+            outFd = ((FileOutputStream) out).getFD();
+            byte[] buffer = new byte[512];
+            int read = 0;
+            int readLast;
+            do {
+                readLast = readBlock(fileInputStream, buffer);
+                if (isEndOfTar(buffer)) {
+                    state.mCurrentBytes = read;
+                    return;
+                }
+                out.write(buffer, 0, readLast);
+                read += readLast;
+            } while (readLast == 512);
+        } catch (IOException e) {
+            throw new StopRequestException(STATUS_FILE_ERROR, e);
+        } finally {
+            closeAfterWrite(out, outFd);
+        }
+    }
+
+    private int readBlock(FileInputStream fileInputStream, byte[] buffer) throws IOException {
+        int read = 0;
+        int readLast;
+        while (read < 512) {
+            readLast = fileInputStream.read(buffer, read, 512 - read);
+            if (readLast == -1) {
+                return read;
+            }
+            read += readLast;
+        }
+        return read;
+    }
+
+    private boolean isEndOfTar(byte[] buffer) {
+        for (byte b : buffer) {
+            if (b != 0x0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isWaitForIt() {
+        return true;
+    }
+
+    private void pause() {
+        ContentValues values = new ContentValues();
+        values.put(Downloads.Impl.COLUMN_STATUS, Downloads.Impl.STATUS_PAUSED_BY_APP);
+        mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
     }
 
     private boolean cannotResume(State state) {
@@ -731,6 +822,7 @@ class DownloadThread implements Runnable {
      * appropriately for resumption.
      */
     private void setupDestinationFile(State state) throws StopRequestException {
+        Log.setShowLogs(true);
         if (!TextUtils.isEmpty(state.mFilename)) { // only true if we've already run a thread for this download
             Log.i("have run thread before for id: " + mInfo.mId + ", and state.mFilename: " + state.mFilename);
             if (!Helpers.isFilenameValid(state.mFilename, mStorageManager.getDownloadDataDirectory())) {
@@ -750,8 +842,9 @@ class DownloadThread implements Runnable {
                     Log.i("resuming download for id: " + mInfo.mId + ", BUT starting from scratch again: ");
                 } else if (mInfo.mETag == null && !mInfo.mNoIntegrity) {
                     // This should've been caught upon failure
-                    Log.d("setupDestinationFile() unable to resume download, deleting "
-                            + state.mFilename);
+                    Log.d(
+                            "setupDestinationFile() unable to resume download, deleting "
+                                    + state.mFilename);
                     f.delete();
                     throw new StopRequestException(STATUS_CANNOT_RESUME, "Trying to resume a download that can't be resumed");
                 } else {

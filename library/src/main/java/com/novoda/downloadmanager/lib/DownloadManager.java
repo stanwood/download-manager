@@ -361,6 +361,12 @@ public class DownloadManager {
         return id;
     }
 
+    public void resume(long id) {
+        ContentValues values = new ContentValues();
+        values.put(Downloads.Impl.COLUMN_STATUS, Downloads.Impl.STATUS_PENDING);
+        mResolver.update(ContentUris.withAppendedId(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI, id), values, null, null);
+    }
+
     public void markDeleted(URI uri) {
         Cursor cursor = null;
         try {
