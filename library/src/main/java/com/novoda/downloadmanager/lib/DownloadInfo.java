@@ -96,6 +96,7 @@ class DownloadInfo {
             info.mDescription = getString(Downloads.Impl.COLUMN_DESCRIPTION);
             info.mBypassRecommendedSizeLimit = getInt(Downloads.Impl.COLUMN_BYPASS_RECOMMENDED_SIZE_LIMIT);
             info.bigPictureResourceUrl = getString(Downloads.Impl.COLUMN_BIG_PICTURE);
+            info.isWaitForIt = getInt(Downloads.Impl.COLUMN_IS_WAIT_FOR_IT) != 0;
 
             synchronized (this) {
                 info.mControl = getInt(Downloads.Impl.COLUMN_CONTROL);
@@ -231,6 +232,7 @@ class DownloadInfo {
     public String mDescription;
     public int mBypassRecommendedSizeLimit;
     public String bigPictureResourceUrl;
+    public boolean isWaitForIt;
 
     private List<Pair<String, String>> mRequestHeaders = new ArrayList<Pair<String, String>>();
 
@@ -473,7 +475,7 @@ class DownloadInfo {
             final boolean isActive = mSubmittedTask != null && !mSubmittedTask.isDone();
             if (!isActive) {
                 updateStatus(Downloads.Impl.STATUS_PENDING);
-                mTask = new DownloadThread(mContext, mSystemFacade, this, mStorageManager, mNotifier);
+                mTask = new DownloadThread(mContext, mSystemFacade, this, mStorageManager, mNotifier, new TarFileTruncator());
                 mSubmittedTask = executor.submit(mTask);
             }
             return isActive;

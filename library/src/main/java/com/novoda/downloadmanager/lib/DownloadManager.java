@@ -305,6 +305,7 @@ public class DownloadManager {
             Downloads.Impl.COLUMN_TITLE,
             Downloads.Impl.COLUMN_DESCRIPTION,
             Downloads.Impl.COLUMN_BIG_PICTURE,
+            Downloads.Impl.COLUMN_IS_WAIT_FOR_IT,
             Downloads.Impl.COLUMN_URI,
             Downloads.Impl.COLUMN_STATUS,
             Downloads.Impl.COLUMN_FILE_NAME_HINT,

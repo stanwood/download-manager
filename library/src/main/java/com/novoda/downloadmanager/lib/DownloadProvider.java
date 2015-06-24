@@ -70,7 +70,7 @@ public final class DownloadProvider extends ContentProvider {
     /**
      * Current database version
      */
-    private static final int DB_VERSION = 109;
+    private static final int DB_VERSION = 110;
 
     /**
      * Name of table in the database
@@ -161,6 +161,7 @@ public final class DownloadProvider extends ContentProvider {
             Downloads.Impl.COLUMN_DELETED,
             Downloads.Impl.COLUMN_NOTIFICATION_EXTRAS,
             Downloads.Impl.COLUMN_BIG_PICTURE,
+            Downloads.Impl.COLUMN_IS_WAIT_FOR_IT,
             OpenableColumns.DISPLAY_NAME,
             OpenableColumns.SIZE,
     };
@@ -326,6 +327,10 @@ public final class DownloadProvider extends ContentProvider {
 
                 case 109:
                     addColumn(db, DB_TABLE, Downloads.Impl.COLUMN_BIG_PICTURE, "TEXT");
+                    break;
+
+                case 110:
+                    addColumn(db, DB_TABLE, Downloads.Impl.COLUMN_IS_WAIT_FOR_IT, "BOOLEAN NOT NULL DEFAULT 0");
                     break;
 
                 default:
@@ -613,6 +618,7 @@ public final class DownloadProvider extends ContentProvider {
         copyString(Downloads.Impl.COLUMN_COOKIE_DATA, values, filteredValues);
         copyString(Downloads.Impl.COLUMN_USER_AGENT, values, filteredValues);
         copyString(Downloads.Impl.COLUMN_REFERER, values, filteredValues);
+        copyBoolean(Downloads.Impl.COLUMN_IS_WAIT_FOR_IT, values, filteredValues);
 
         // UID, PID columns
         if (getContext().checkCallingPermission(Downloads.Impl.PERMISSION_ACCESS_ADVANCED) == PackageManager.PERMISSION_GRANTED) {
@@ -762,6 +768,7 @@ public final class DownloadProvider extends ContentProvider {
         values.remove(Downloads.Impl.COLUMN_ALLOW_METERED);
         values.remove(Downloads.Impl.COLUMN_IS_VISIBLE_IN_DOWNLOADS_UI);
         values.remove(Downloads.Impl.COLUMN_MEDIA_SCANNED);
+        values.remove(Downloads.Impl.COLUMN_IS_WAIT_FOR_IT);
         Iterator<Map.Entry<String, Object>> iterator = values.valueSet().iterator();
         while (iterator.hasNext()) {
             String key = iterator.next().getKey();

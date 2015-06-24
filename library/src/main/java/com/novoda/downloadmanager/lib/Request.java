@@ -48,6 +48,7 @@ public class Request {
     private boolean mMeteredAllowed = true;
     private boolean mIsVisibleInDownloadsUi = true;
     private boolean mScannable = false;
+    private boolean isWaitForIt = false;
     private String extraField;
     private String bigPictureUrl;
     /**
@@ -244,6 +245,14 @@ public class Request {
     }
 
     /**
+     * Automatically pause the download when reaching the end of the file instead of writing the last bytes to disk.
+     * This allows for a resume of the download against an updated tar file.
+     */
+    public void autoPauseTarFileDownloads() {
+        isWaitForIt = true;
+    }
+
+    /**
      * Add an HTTP header to be included with the download request.  The header will be added to
      * the end of the list.
      *
@@ -422,7 +431,6 @@ public class Request {
                     Downloads.Impl.DESTINATION_CACHE_PARTITION_PURGEABLE);
         }
         // is the file supposed to be media-scannable?
-        values.put(Downloads.Impl.COLUMN_MEDIA_SCANNED, (mScannable) ? SCANNABLE_VALUE_YES : SCANNABLE_VALUE_NO);
 
         if (!mRequestHeaders.isEmpty()) {
             encodeHttpHeaders(values);
@@ -439,6 +447,8 @@ public class Request {
         values.put(Downloads.Impl.COLUMN_IS_VISIBLE_IN_DOWNLOADS_UI, mIsVisibleInDownloadsUi);
         values.put(Downloads.Impl.COLUMN_NOTIFICATION_EXTRAS, extraField);
         values.put(Downloads.Impl.COLUMN_BIG_PICTURE, bigPictureUrl);
+        values.put(Downloads.Impl.COLUMN_MEDIA_SCANNED, (mScannable) ? SCANNABLE_VALUE_YES : SCANNABLE_VALUE_NO);
+        values.put(Downloads.Impl.COLUMN_IS_WAIT_FOR_IT, isWaitForIt);
 
         return values;
     }

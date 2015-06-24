@@ -224,6 +224,12 @@ final class Downloads {
         public static final String COLUMN_BIG_PICTURE = "notificationBigPictureResourceId";
 
         /**
+         * A flag for tar files download to automatically pause the download when reaching the end of the file
+         * instead of writing the last bytes to disk. This allows for a resume of the download against an updated tar file.
+         */
+        public static final String COLUMN_IS_WAIT_FOR_IT = "waitForIt";
+
+        /**
          * The name of the column contain the values of the cookie to be used for
          * the download. This is used directly as the value for the Cookie: HTTP
          * header that gets sent with the request.
