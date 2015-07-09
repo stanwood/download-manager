@@ -159,7 +159,7 @@ public class DownloadService extends Service {
             public FileDownloadInfo create(FileDownloadInfo.Reader reader) {
                 return createNewDownloadInfo(reader);
             }
-        });
+        }, Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI);
 
     }
 
