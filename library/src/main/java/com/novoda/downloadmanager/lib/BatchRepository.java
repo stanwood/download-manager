@@ -4,15 +4,14 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 
+import com.novoda.downloadmanager.lib.util.CountingMap;
 import com.novoda.notils.string.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 class BatchRepository {
 
@@ -44,14 +43,15 @@ class BatchRepository {
     );
 
     private static final int PRIORITISED_STATUSES_SIZE = PRIORITISED_STATUSES.size();
-
     private static final String[] PROJECT_BATCH_ID = {DownloadContract.Batches._ID};
+
     private static final String WHERE_DELETED_VALUE_IS = DownloadContract.Batches.COLUMN_DELETED + " = ?";
     private static final String[] MARKED_FOR_DELETION = {"1"};
-
     private final ContentResolver resolver;
+
     private final DownloadDeleter downloadDeleter;
     private final DownloadsUriProvider downloadsUriProvider;
+    private final CountingMap<Integer> statusCounts = new CountingMap<>(PRIORITISED_STATUSES_SIZE);
 
     BatchRepository(ContentResolver resolver, DownloadDeleter downloadDeleter, DownloadsUriProvider downloadsUriProvider) {
         this.resolver = resolver;
@@ -102,7 +102,7 @@ class BatchRepository {
 
     int getBatchStatus(long batchId) {
         Cursor cursor = null;
-        Map<Integer, Integer> statusCounts = new HashMap<>(PRIORITISED_STATUSES_SIZE);
+        statusCounts.clear();
         try {
             String[] selectionArgs = {String.valueOf(batchId)};
             cursor = resolver.query(
@@ -121,8 +121,7 @@ class BatchRepository {
                     return statusCode;
                 }
 
-                int currentStatusCount = statusCounts.containsKey(statusCode) ? statusCounts.get(statusCode) : 0;
-                statusCounts.put(statusCode, currentStatusCount + 1);
+                statusCounts.incrementOnKey(statusCode);
             }
         } finally {
             if (cursor != null) {
@@ -133,27 +132,23 @@ class BatchRepository {
         // Handle the special case where if a batch only contains queued and complete items, it is downloading
         boolean containsItemsWhichAreNotQueuedOrComplete = false;
         for (int status : NOT_QUEUED_OR_COMPLETE) {
-            if (hasCountForKey(statusCounts, status)) {
+            if (statusCounts.hasCountForKey(status)) {
                 containsItemsWhichAreNotQueuedOrComplete |= true;
             }
         }
-        boolean containsQueuedItems = hasCountForKey(statusCounts, DownloadStatus.PENDING);
-        boolean containsCompleteItems = hasCountForKey(statusCounts, DownloadStatus.SUCCESS);
+        boolean containsQueuedItems = statusCounts.hasCountForKey(DownloadStatus.PENDING);
+        boolean containsCompleteItems = statusCounts.hasCountForKey(DownloadStatus.SUCCESS);
         if (!containsItemsWhichAreNotQueuedOrComplete && containsQueuedItems && containsCompleteItems) {
             return DownloadStatus.RUNNING;
         }
 
         for (int status : PRIORITISED_STATUSES) {
-            if (hasCountForKey(statusCounts, status)) {
+            if (statusCounts.hasCountForKey(status)) {
                 return status;
             }
         }
 
         return DownloadStatus.UNKNOWN_ERROR;
-    }
-
-    private static boolean hasCountForKey(Map<Integer, Integer> statusCounts, int key) {
-        return statusCounts.containsKey(key) && statusCounts.get(key) > 0;
     }
 
     public DownloadBatch retrieveBatchFor(FileDownloadInfo download) {
