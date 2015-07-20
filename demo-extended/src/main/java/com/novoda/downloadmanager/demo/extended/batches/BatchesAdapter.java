@@ -10,10 +10,10 @@ import com.novoda.downloadmanager.demo.R;
 import java.util.List;
 import java.util.Locale;
 
-public class BatchAdapter extends BaseAdapter {
+public class BatchesAdapter extends BaseAdapter {
     private final List<Batch> batches;
 
-    public BatchAdapter(List<Batch> batches) {
+    public BatchesAdapter(List<Batch> batches) {
         this.batches = batches;
     }
 
@@ -42,6 +42,7 @@ public class BatchAdapter extends BaseAdapter {
         TextView statusTextView = (TextView) view.findViewById(R.id.batch_status_text);
         TextView totalSizeTextView = (TextView) view.findViewById(R.id.batch_total_size_text);
         TextView currentSizeTextView = (TextView) view.findViewById(R.id.batch_current_size_text);
+        TextView extraDataTextView = (TextView) view.findViewById(R.id.batch_extra_data_text);
 
         idTextView.setText(String.format(Locale.getDefault(), "Id: %d", batch.getId()));
         titleTextView.setText(batch.getTitle());
@@ -49,6 +50,7 @@ public class BatchAdapter extends BaseAdapter {
         statusTextView.setText(status);
         totalSizeTextView.setText(String.format(Locale.getDefault(), "Total size: %d bytes", batch.getTotalBytes()));
         currentSizeTextView.setText(String.format(Locale.getDefault(), "Current size: %d bytes", batch.getCurrentBytes()));
+        extraDataTextView.setText(batch.getExtraData());
 
         return view;
     }

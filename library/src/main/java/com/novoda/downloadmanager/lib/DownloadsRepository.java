@@ -21,7 +21,13 @@ class DownloadsRepository {
     }
 
     public List<FileDownloadInfo> getAllDownloads() {
-        Cursor downloadsCursor = contentResolver.query(downloadsUriProvider.getAllDownloadsUri(), null, null, null, null);
+        Cursor downloadsCursor = contentResolver.query(
+                downloadsUriProvider.getAllDownloadsUri(),
+                null,
+                null,
+                null,
+                DownloadContract.Batches._ID + " ASC");
+
         try {
             List<FileDownloadInfo> downloads = new ArrayList<>();
             FileDownloadInfo.Reader reader = new FileDownloadInfo.Reader(contentResolver, downloadsCursor);
@@ -48,8 +54,15 @@ class DownloadsRepository {
         }
     }
 
+    public FileDownloadInfo.ControlStatus getDownloadInfoControlStatusFor(long id) {
+        FileDownloadInfo.ControlStatus.Reader reader = new FileDownloadInfo.ControlStatus.Reader(contentResolver, downloadsUriProvider);
+        return downloadInfoCreator.create(reader, id);
+    }
+
     interface DownloadInfoCreator {
         FileDownloadInfo create(FileDownloadInfo.Reader reader);
+
+        FileDownloadInfo.ControlStatus create(FileDownloadInfo.ControlStatus.Reader reader, long id);
     }
 
 }

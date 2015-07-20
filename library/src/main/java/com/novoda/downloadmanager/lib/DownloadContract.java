@@ -79,7 +79,7 @@ final class DownloadContract {
          * <P>Type: BIGINT</P>
          * <P>Owner can Read</P>
          */
-        public static final String COLUMN_LAST_MODIFICATION = "lastmod";
+        public static final String COLUMN_LAST_MODIFICATION = "last_modified_timestamp";
         /**
          * The name of the column containing the component name of the class that
          * will receive notifications associated with the download. The
@@ -89,10 +89,6 @@ final class DownloadContract {
          * <P>Owner can Init/Read</P>
          */
         public static final String COLUMN_NOTIFICATION_CLASS = "notificationclass";
-        /**
-         * Query where clause for general querying.
-         */
-        private static final String QUERY_WHERE_CLAUSE = COLUMN_NOTIFICATION_CLASS + "=?";
         /**
          * If extras are specified when requesting a download they will be provided in the intent that
          * is sent to the specified class and package when a download has finished.
@@ -315,16 +311,18 @@ final class DownloadContract {
         public static final String COLUMN_DELETED = "deleted";
 
         /**
-         * The total size of the batch in bytes.
-         * <P>Type: INTEGER</P>
+         * For you to store any extra data you want to pass through the download manager.
+         * <P>Type: TEXT</P>
          */
-        public static final String COLUMN_TOTAL_BYTES = "batch_total_bytes";
-
+        public static final String COLUMN_EXTRA_DATA = "extra_data";
         /**
-         * The current size of the batch in bytes (on device).
-         * <P>Type: INTEGER</P>
+         * The name of the column containing the date at which some interesting
+         * status changed in the batch. Stored as a System.currentTimeMillis()
+         * value.
+         * <P>Type: BIGINT</P>
+         * <P>Owner can Read</P>
          */
-        public static final String COLUMN_CURRENT_BYTES = "batch_current_bytes";
+        public static final String COLUMN_LAST_MODIFICATION = "last_modified_timestamp";
 
         private Batches() {
             // non-instantiable class
@@ -338,6 +336,28 @@ final class DownloadContract {
         private DownloadsByBatch() {
             // non-instantiable class
         }
+
+    }
+
+    static final class BatchesWithSizes {
+
+        public static final String VIEW_NAME_BATCHES_WITH_SIZES = "BatchesWithSizes";
+
+        private BatchesWithSizes() {
+            // non-instantiable class
+        }
+
+        /**
+         * The total size of the batch in bytes.
+         * <P>Type: INTEGER</P>
+         */
+        public static final String COLUMN_TOTAL_BYTES = "batch_total_bytes";
+
+        /**
+         * The current size of the batch in bytes (on device).
+         * <P>Type: INTEGER</P>
+         */
+        public static final String COLUMN_CURRENT_BYTES = "batch_current_bytes";
 
     }
 

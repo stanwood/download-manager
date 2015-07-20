@@ -58,15 +58,15 @@ public class QueryTest {
     public void whenWeSetABatchStatusOrderByOnAQueryThenTheResolverIsQueriedWithTheCorrectSortOrder() {
         query.orderBy(COLUMN_LAST_MODIFIED_TIMESTAMP, Query.ORDER_ASCENDING).runQuery(resolver, null, uri);
 
-        // Actually resolves to Downloads.Impl.COLUMN_LAST_MODIFIED
-        verify(resolver).query(any(Uri.class), any(String[].class), anyString(), any(String[].class), eq("lastmod ASC"));
+        // Actually resolves to DownloadContract.Downloads.COLUMN_LAST_MODIFIED
+        verify(resolver).query(any(Uri.class), any(String[].class), anyString(), any(String[].class), eq("last_modified_timestamp ASC"));
     }
 
     @Test
     public void whenWeSetNoOrderByOnAQueryThenTheResolverIsQueriedWithTheLastModifiedSortOrder() {
         query.runQuery(resolver, null, uri);
 
-        verify(resolver).query(any(Uri.class), any(String[].class), anyString(), any(String[].class), eq("lastmod DESC"));
+        verify(resolver).query(any(Uri.class), any(String[].class), anyString(), any(String[].class), eq("last_modified_timestamp DESC"));
     }
 
     @Test
@@ -127,6 +127,25 @@ public class QueryTest {
         verify(resolver).query(any(Uri.class), any(String[].class), stringArgumentCaptor.capture(), any(String[].class), anyString());
 
         assertSelectionDoesNotContain(COLUMN_EXTRA_DATA + " IN ");
+    }
+
+    @Test
+    public void givenMultipleNotificationExtrasWhenTheQueryIsCreatedThenTheWhereStatementIsCorrect() {
+        query.setFilterByNotificationExtras("13", "14").runQuery(resolver, null, uri);
+
+        verify(resolver).query(any(Uri.class), any(String[].class), stringArgumentCaptor.capture(), any(String[].class), anyString());
+
+        assertSelectionContains("(" + COLUMN_NOTIFICATION_EXTRAS + " = '13' OR " + COLUMN_NOTIFICATION_EXTRAS + " = '14')");
+    }
+
+    @Test
+    public void givenEmptyNotificationExtrasWhenTheQueryIsCreatedThenTheWhereStatementDoesNotContainExtrasPredicate() {
+        String[] empty = {};
+        query.setFilterByNotificationExtras(empty).runQuery(resolver, null, uri);
+
+        verify(resolver).query(any(Uri.class), any(String[].class), stringArgumentCaptor.capture(), any(String[].class), anyString());
+
+        assertSelectionDoesNotContain(COLUMN_NOTIFICATION_EXTRAS);
     }
 
     private void assertSelectionContains(String sequence) {
