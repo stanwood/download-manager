@@ -54,6 +54,7 @@ public class Request {
     private long batchId = -1L;
     private String extraData;
     private boolean alwaysResume;
+    private boolean noIntegrity;
 
     /**
      * if a file is designated as a MediaScanner scannable file, the following value is
@@ -230,6 +231,15 @@ public class Request {
      */
     public Request alwaysAttemptResume() {
         alwaysResume = true;
+        return this;
+    }
+
+    /**
+     * When a ETag header is present, the application should check the integrity of the
+     * downloaded file, otherwise the current download won't be able to be resumed
+     */
+    public Request applicationChecksFileIntegrity() {
+        noIntegrity = true;
         return this;
     }
 
@@ -456,6 +466,7 @@ public class Request {
         values.put(DownloadContract.Downloads.COLUMN_BATCH_ID, batchId);
         values.put(DownloadContract.Downloads.COLUMN_EXTRA_DATA, extraData);
         values.put(DownloadContract.Downloads.COLUMN_ALWAYS_RESUME, alwaysResume);
+        values.put(DownloadContract.Downloads.COLUMN_NO_INTEGRITY, noIntegrity);
 
         return values;
     }
