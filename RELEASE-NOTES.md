@@ -1,3 +1,20 @@
+
+0.3.0
+-----
+- Adds first round of Android O support! The download service will now run in the foreground with a notification even when the app that started it is running in the background or has been swiped away. #237
+- Adds NotificationInitialiser interface so client apps can build against Android O. This will be built upon in future releases. #238 #239
+- Download Manager no longer inserts database entries if they contain a duplicate file URI. #234 This fixes #228
+- We no longer try and close null database cursors, because that causes NullPointerExceptions. #233 Big thanks to @mcroghan for this fix.
+
+0.2.46
+-----
+- Fixes entire batch being marked as failed when connectivity is lost;
+- Fixes batch being marked as queued when a download is paused by the app/user. #230
+
+0.2.45
+-----
+- Downloads reconnect on network disconnections for Android N or greater Restart service on disconnection #213
+
 0.2.44
 -----
 - FIXES BUG - Allow downloading to location returned from getExternalFilesDirs in API 19 and newer #204
