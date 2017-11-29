@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.facebook.stetho.Stetho;
 import com.novoda.downloadmanager.demo.R;
 import com.novoda.downloadmanager.demo.extended.batches.BatchDownloadsActivity;
 import com.novoda.downloadmanager.demo.extended.delete.DeleteActivity;
@@ -16,6 +17,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Stetho.initializeWithDefaults(this);
+
         setContentView(R.layout.activity_main);
 
         findViewById(R.id.pause_resume_button).setOnClickListener(
