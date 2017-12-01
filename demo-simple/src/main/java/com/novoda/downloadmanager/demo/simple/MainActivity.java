@@ -1,6 +1,5 @@
 package com.novoda.downloadmanager.demo.simple;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -13,10 +12,12 @@ import com.facebook.stetho.Stetho;
 import com.novoda.downloadmanager.DownloadManagerBuilder;
 import com.novoda.downloadmanager.demo.R;
 import com.novoda.downloadmanager.lib.DownloadManager;
-import com.novoda.downloadmanager.notifications.NotificationVisibility;
 import com.novoda.downloadmanager.lib.Query;
 import com.novoda.downloadmanager.lib.Request;
+import com.novoda.downloadmanager.lib.RequestBatch;
+import com.novoda.downloadmanager.notifications.NotificationVisibility;
 
+import java.net.URI;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements QueryForDownloadsAsyncTask.Callback {
@@ -47,29 +48,40 @@ public class MainActivity extends AppCompatActivity implements QueryForDownloads
     }
 
     private void setupDownloadingExample() {
-        Uri uriSmall = Uri.parse(SMALL_FILE);
-        final Request requestSmall = new Request(uriSmall)
-                .setDestinationInInternalFilesDir(Environment.DIRECTORY_PICTURES, "thechase.dat")
-                .setNotificationVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
-                .setTitle("Joey Essex smashes it!")
-                .setDescription("jk not really.")
-                .setBigPictureUrl(PENGUINS_IMAGE);
 
-        Uri uriBig = Uri.parse(BIG_FILE);
-        final Request request = new Request(uriBig)
-                .setDestinationInInternalFilesDir(Environment.DIRECTORY_MOVIES, "penguins.dat")
-                .setNotificationVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
-                .setTitle("Family of Penguins")
-                .setDescription("These are not the beards you're looking for")
-                .setBigPictureUrl(PENGUINS_IMAGE);
+        final RequestBatch firstRequestBatch = buildRequestBatch("Joey Essex smashes it!", "thechase.dat", "penguins.dat");
+        final RequestBatch secondRequestBatch = buildRequestBatch("Joey Essex does not smash it", "thechase2.dat", "penguins2.dat");
 
         findViewById(R.id.main_download_button).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(@NonNull View v) {
-                        downloadManager.enqueue(request);
+                        downloadManager.enqueue(firstRequestBatch);
+                        downloadManager.enqueue(secondRequestBatch);
                     }
                 });
+    }
+
+    @NonNull
+    private RequestBatch buildRequestBatch(String title, String subPath, String subPath1) {
+        final RequestBatch requestBatch = new RequestBatch.Builder()
+                .withTitle(title)
+                .withVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
+                .withDescription("jk not really.")
+                .withBigPictureUrl(PENGUINS_IMAGE)
+                .build();
+
+        URI smallFileURI = URI.create(SMALL_FILE);
+        Request smallFileRequest = new Request(smallFileURI)
+                .setDestinationInInternalFilesDir(Environment.DIRECTORY_PICTURES, subPath);
+
+        URI bigFileURI = URI.create(BIG_FILE);
+        Request bigFileRequest = new Request(bigFileURI)
+                .setDestinationInInternalFilesDir(Environment.DIRECTORY_PICTURES, subPath1);
+
+        requestBatch.addRequest(smallFileRequest);
+        requestBatch.addRequest(bigFileRequest);
+        return requestBatch;
     }
 
     private void setupQueryingExample() {
