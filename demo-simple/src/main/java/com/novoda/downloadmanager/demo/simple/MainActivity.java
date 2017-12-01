@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements QueryForDownloads
 
     private static final String BIG_FILE = "http://ipv4.download.thinkbroadband.com/200MB.zip";
     private static final String PENGUINS_IMAGE = "http://i.imgur.com/Y7pMO5Kb.jpg";
+    private static final String SMALL_FILE = "http://ipv4.download.thinkbroadband.com/10MB.zip";
 
     private DownloadManager downloadManager;
     private RecyclerView recyclerView;
@@ -46,8 +47,16 @@ public class MainActivity extends AppCompatActivity implements QueryForDownloads
     }
 
     private void setupDownloadingExample() {
-        Uri uri = Uri.parse(BIG_FILE);
-        final Request request = new Request(uri)
+        Uri uriSmall = Uri.parse(SMALL_FILE);
+        final Request requestSmall = new Request(uriSmall)
+                .setDestinationInInternalFilesDir(Environment.DIRECTORY_PICTURES, "thechase.dat")
+                .setNotificationVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
+                .setTitle("Joey Essex smashes it!")
+                .setDescription("jk not really.")
+                .setBigPictureUrl(PENGUINS_IMAGE);
+
+        Uri uriBig = Uri.parse(BIG_FILE);
+        final Request request = new Request(uriBig)
                 .setDestinationInInternalFilesDir(Environment.DIRECTORY_MOVIES, "penguins.dat")
                 .setNotificationVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
                 .setTitle("Family of Penguins")
