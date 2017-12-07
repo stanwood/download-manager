@@ -22,7 +22,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements QueryForDownloadsAsyncTask.Callback {
 
-    private static final String BIG_FILE = "http://ipv4.download.thinkbroadband.com/200MB.zip";
+    private static final String BIG_FILE = "http://ipv4.download.thinkbroadband.com/50MB.zip";
     private static final String PENGUINS_IMAGE = "http://i.imgur.com/Y7pMO5Kb.jpg";
     private static final String SMALL_FILE = "http://ipv4.download.thinkbroadband.com/10MB.zip";
 
