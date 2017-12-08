@@ -23,8 +23,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements QueryForDownloadsAsyncTask.Callback {
 
     private static final String BIG_FILE = "http://ipv4.download.thinkbroadband.com/50MB.zip";
-    private static final String PENGUINS_IMAGE = "http://i.imgur.com/Y7pMO5Kb.jpg";
     private static final String SMALL_FILE = "http://ipv4.download.thinkbroadband.com/10MB.zip";
+    private static final String PENGUINS_IMAGE = "http://i.imgur.com/Y7pMO5Kb.jpg";
 
     private DownloadManager downloadManager;
     private RecyclerView recyclerView;
@@ -49,8 +49,8 @@ public class MainActivity extends AppCompatActivity implements QueryForDownloads
 
     private void setupDownloadingExample() {
 
-        final RequestBatch firstRequestBatch = buildRequestBatch("Joey Essex smashes it!", "thechase.dat", "penguins.dat");
-        final RequestBatch secondRequestBatch = buildRequestBatch("Joey Essex does not smash it", "thechase2.dat", "penguins2.dat");
+        final RequestBatch firstRequestBatch = buildRequestBatch("The Chase", "thechase.dat", "penguins.dat");
+        final RequestBatch secondRequestBatch = buildRequestBatch("Educating Yorkshire", "educatingyorkshire.dat", "penguins2.dat");
 
         findViewById(R.id.main_download_button).setOnClickListener(
                 new View.OnClickListener() {
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements QueryForDownloads
         final RequestBatch requestBatch = new RequestBatch.Builder()
                 .withTitle(title)
                 .withVisibility(NotificationVisibility.ACTIVE_OR_COMPLETE)
-                .withDescription("jk not really.")
+                .withDescription("Programme Description!")
                 .withBigPictureUrl(PENGUINS_IMAGE)
                 .build();
 
