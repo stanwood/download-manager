@@ -1,25 +1,9 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
-        classpath 'com.novoda:bintray-release:0.3.4'
-    }
-}
 apply plugin: 'com.android.library'
 apply plugin: 'bintray-release'
 
-repositories {
-    jcenter()
-    maven {
-        url 'https://maven.google.com'
-    }
-}
-
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.3'
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 14
