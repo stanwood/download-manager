@@ -55,6 +55,7 @@ public class Query {
     private boolean onlyIncludeVisibleInDownloadsUi = false;
     private String[] filterNotificiationExtras;
     private String[] filterExtraData;
+    private String[] filterUri;
     private String orderString = DownloadContract.Downloads.COLUMN_LAST_MODIFICATION + " DESC";
 
     /**
@@ -94,6 +95,17 @@ public class Query {
      */
     public Query setFilterByExtraData(String... extraData) {
         filterExtraData = extraData;
+        return this;
+    }
+
+
+    /**
+     * Include only the downloads with the given uri.
+     *
+     * @return this object
+     */
+    public Query setFilterByUri(String... uri) {
+        filterUri = uri;
         return this;
     }
 
@@ -177,6 +189,7 @@ public class Query {
         filterByBatchIds(selectionParts);
         filterByNotificationExtras(selectionParts);
         filterByExtraData(selectionParts);
+        filterByUri(selectionParts);
         filterByStatus(selectionParts);
 
         if (onlyIncludeVisibleInDownloadsUi) {
@@ -238,6 +251,17 @@ public class Query {
         List<String> parts = new ArrayList<>();
         for (String filterExtra : filterExtraData) {
             parts.add(extraDataClause(filterExtra));
+        }
+        selectionParts.add(joinStrings(" OR ", parts));
+    }
+
+    private void filterByUri(List<String> selectionParts) {
+        if (filterUri == null) {
+            return;
+        }
+        List<String> parts = new ArrayList<>();
+        for (String filterUri : filterUri) {
+            parts.add(uriClause(filterUri));
         }
         selectionParts.add(joinStrings(" OR ", parts));
     }
@@ -304,5 +328,9 @@ public class Query {
 
     private String statusClause(String operator, int value) {
         return DownloadContract.Downloads.COLUMN_STATUS + operator + "'" + value + "'";
+    }
+
+    private String uriClause(String uri) {
+        return DownloadContract.Downloads.COLUMN_URI + " = '" + uri + "'";
     }
 }
