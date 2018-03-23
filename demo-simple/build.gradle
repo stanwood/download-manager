@@ -1,25 +1,43 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion target_version
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         applicationId "com.novoda.downloadmanager.demo.simple"
-        minSdkVersion min_version
-        targetSdkVersion target_version
+        minSdkVersion 14
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
-
-        manifestPlaceholders = [downloadAuthority: "${applicationId}"]
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     lintOptions {
-        abortOnError false
+        lintConfig teamPropsFile('static-analysis/lint-config.xml')
+        abortOnError true
+        warningsAsErrors true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
-    implementation project(':library')
-    implementation "com.android.support:appcompat-v7:$support_version"
-    implementation "com.android.support:recyclerview-v7:$support_version"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.facebook.stetho:stetho:1.5.0'
+    implementation 'com.android.support:appcompat-v7:27.1.0'
+    implementation project(path: ':library')
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
 }
