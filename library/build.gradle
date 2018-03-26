@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'bintray-release'
-apply plugin: 'com.github.dcendents.android-maven'
+
 android {
     compileSdkVersion 27
     buildToolsVersion "27.0.3"
@@ -50,7 +50,7 @@ publish {
     userOrg = 'novoda'
     groupId = 'com.novoda'
     artifactId = 'download-manager'
-    publishVersion = 'SNAPSHOT-2.0.33'
+    publishVersion = 'SNAPSHOT-2.0.34'
     description = 'Download manager based on AOSP DM but allowing downloading to internal private storage.'
     website = 'https://github.com/novoda/download-manager'
 }
